@@ -11,7 +11,7 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
   const tableRef = useRef<HTMLDivElement>(null);
   const tabulatorRef = useRef<Tabulator | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isTableReady, setIsTableReady] = useState(false);
+  const editModeRef = useRef(false); // 실시간 편집모드 상태 추적
 
   // 직책 및 부서 옵션 정의
   const positionOptions = ["신입", "대리", "과장"];
@@ -63,7 +63,8 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
         paginationSizeSelector: [5, 10, 20, 50],
         movableColumns: true,
         resizableRows: true,
-        selectable: true,
+        selectable: 1, // 단일 행 선택
+        selectableCheck: () => !editModeRef.current, // 편집모드가 아닐 때만 선택 가능
         tooltips: true,
         addRowPos: "top",
         history: true,
@@ -92,13 +93,10 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
         cellEdited: (cell: any) => {
           console.log("셀이 편집되었습니다:", cell.getValue());
         },
-        rowClick: (e: any, row: any) => {
+        rowClick: (_e: any, row: any) => {
           console.log("행이 클릭되었습니다:", row.getData());
         },
       });
-      
-      // 테이블이 완전히 초기화되면 플래그 설정
-      setIsTableReady(true);
     }
 
     // 데이터 업데이트
@@ -112,13 +110,12 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
         tabulatorRef.current.destroy();
         tabulatorRef.current = null;
       }
-      setIsTableReady(false);
     };
-  }, [data, height]);
+  }, [data, height, getColumns]);
 
   // 편집모드 변경 시 컬럼 설정 업데이트 (destroy 없이)
   useEffect(() => {
-    if (tabulatorRef.current && tableRef.current && isTableReady) {
+    if (tabulatorRef.current && tableRef.current) {
       try {
         console.log(`편집모드 변경: ${isEditMode ? 'ON' : 'OFF'} - setColumns 사용 (destroy 없음)`);
         const startTime = performance.now();
@@ -157,7 +154,8 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
           paginationSizeSelector: [5, 10, 20, 50],
           movableColumns: true,
           resizableRows: true,
-          selectable: true,
+          selectable: 1, // 단일 행 선택
+          selectableCheck: () => !editModeRef.current, // 편집모드가 아닐 때만 선택 가능
           tooltips: true,
           addRowPos: "top",
           history: true,
@@ -186,13 +184,18 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
           cellEdited: (cell: any) => {
             console.log("셀이 편집되었습니다:", cell.getValue());
           },
-          rowClick: (e: any, row: any) => {
+          rowClick: (_e: any, row: any) => {
             console.log("행이 클릭되었습니다:", row.getData());
           },
         });
       }
     }
-  }, [isEditMode, getColumns, isTableReady]);
+  }, [isEditMode, getColumns]);
+
+  // 편집모드 상태를 ref에 동기화 (selectableCheck에서 실시간 참조용)
+  useEffect(() => {
+    editModeRef.current = isEditMode;
+  }, [isEditMode]);
 
   // 테이블 조작 함수들
   const addRow = () => {
@@ -242,7 +245,15 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
         <button onClick={addRow} style={{ marginRight: '10px' }}>
           행 추가
         </button>
-        <button onClick={deleteSelectedRows} style={{ marginRight: '10px' }}>
+        <button 
+          onClick={deleteSelectedRows} 
+          disabled={isEditMode}
+          style={{ 
+            marginRight: '10px',
+            opacity: isEditMode ? 0.5 : 1,
+            cursor: isEditMode ? 'not-allowed' : 'pointer'
+          }}
+        >
           선택된 행 삭제
         </button>
         <button onClick={downloadCSV} style={{ marginRight: '10px' }}>

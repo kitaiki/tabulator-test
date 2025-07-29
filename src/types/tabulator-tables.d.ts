@@ -24,7 +24,8 @@ declare module 'tabulator-tables' {
     paginationSizeSelector?: number[];
     movableColumns?: boolean;
     resizableRows?: boolean;
-    selectable?: boolean;
+    selectable?: boolean | number;
+    selectableCheck?: (row: any) => boolean;
     tooltips?: boolean;
     addRowPos?: string;
     history?: boolean;

@@ -27,7 +27,7 @@ const App: React.FC = () => {
             <li>✅ 정렬 및 필터링</li>
             <li>✅ 인라인 편집 (편집모드에서만)</li>
             <li>✅ 페이지네이션</li>
-            <li>✅ 행 선택 및 삭제</li>
+            <li>✅ 단일 행 선택 및 삭제 (보기모드만)</li>
             <li>✅ CSV/JSON 다운로드</li>
             <li>✅ 컬럼 크기 조정</li>
             <li>✅ 컬럼 이동</li>
@@ -36,7 +36,8 @@ const App: React.FC = () => {
           </ul>
           <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '8px', fontSize: '14px' }}>
             <strong>💡 사용 팁:</strong> 편집모드 ON 버튼을 클릭하면 셀을 더블클릭하여 직접 편집할 수 있습니다.<br />
-            <strong>📋 Select 편집:</strong> 직책과 부서는 드롭다운 메뉴에서 선택할 수 있습니다.
+            <strong>📋 Select 편집:</strong> 직책과 부서는 드롭다운 메뉴에서 선택할 수 있습니다.<br />
+            <strong>🎯 행 선택:</strong> 보기모드에서만 단일 행 선택 가능, 편집모드에서는 행 선택이 비활성화됩니다.
           </div>
         </div>
       </main>

@@ -195,6 +195,24 @@
   background-color: rgba(253, 121, 168, 0.1) !important;
 }
 
+/* 편집모드에서 행 선택 비활성화 시각적 표시 */
+.employee-table.edit-mode .tabulator-row {
+  cursor: default !important;
+}
+
+.employee-table.edit-mode .tabulator-row:hover {
+  background-color: inherit !important;
+}
+
+/* 보기모드에서 행 선택 가능 표시 */
+.employee-table:not(.edit-mode) .tabulator-row {
+  cursor: pointer;
+}
+
+.employee-table:not(.edit-mode) .tabulator-row.tabulator-selectable:hover {
+  background-color: #e3f2fd !important;
+}
+
 .employee-table .tabulator-header {
   background: linear-gradient(135deg, #34495e, #2c3e50);
   color: white;
