@@ -113,84 +113,73 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
     };
   }, [data, height, getColumns]);
 
-  // 편집모드 변경 시 컬럼 설정 업데이트 (destroy 없이)
+  // 편집모드 변경 시 즉시 동기화 업데이트 (깜빡임 완전 제거)
   useEffect(() => {
     if (tabulatorRef.current && tableRef.current) {
+      console.log(`편집모드 변경: ${isEditMode ? 'ON' : 'OFF'} - 즉시 동기화 업데이트`);
+      
       try {
-        console.log(`편집모드 변경: ${isEditMode ? 'ON' : 'OFF'} - setColumns 사용 (destroy 없음)`);
-        const startTime = performance.now();
-        
-        // Tabulator 인스턴스와 DOM 요소가 모두 준비된 상태에서만 실행
-        // 약간의 지연을 두어 DOM이 완전히 준비될 때까지 대기
-        setTimeout(() => {
-          if (tabulatorRef.current && tableRef.current && tabulatorRef.current.element) {
+        // RequestAnimationFrame을 사용해 브라우저 렌더링 사이클에 맞춰 업데이트
+        requestAnimationFrame(() => {
+          if (!tabulatorRef.current) return;
+          
+          const startTime = performance.now();
+          
+          // 편집 가능한 컬럼들을 동기적으로 즉시 업데이트
+          const editableFields = [
+            { field: "name", editor: isEditMode ? "input" : false },
+            { field: "age", editor: isEditMode ? "number" : false },
+            { field: "email", editor: isEditMode ? "input" : false },
+            { 
+              field: "position", 
+              editor: isEditMode ? "select" : false,
+              editorParams: isEditMode ? { values: positionOptions } : undefined
+            },
+            { field: "salary", editor: isEditMode ? "number" : false },
+            { 
+              field: "department", 
+              editor: isEditMode ? "select" : false,
+              editorParams: isEditMode ? { values: departmentOptions } : undefined
+            },
+            { field: "startDate", editor: isEditMode ? "date" : false }
+          ];
+
+          // 배치 업데이트로 한 번에 처리
+          editableFields.forEach(column => {
             try {
-              tabulatorRef.current.setColumns(getColumns());
+              const updateDef: any = { editor: column.editor };
+              if (column.editorParams !== undefined) {
+                updateDef.editorParams = column.editorParams;
+              }
               
-              const endTime = performance.now();
-              console.log(`컬럼 업데이트 완료: ${(endTime - startTime).toFixed(2)}ms`);
-            } catch (innerError) {
-              console.error('setColumns 실행 중 에러:', innerError);
-              throw innerError; // catch 블록에서 처리하도록 에러 재발생
+              // 동기적 업데이트 시도 (깜빡임 방지)
+              try {
+                const columnComponent = (tabulatorRef.current as any).getColumn(column.field);
+                if (columnComponent && columnComponent.updateDefinition) {
+                  columnComponent.updateDefinition(updateDef);
+                } else {
+                  // getColumn이 없으면 바로 비동기 방식 사용
+                  throw new Error('getColumn method not available');
+                }
+              } catch (syncError) {
+                // fallback으로 비동기 방식 시도
+                tabulatorRef.current!.updateColumnDefinition(column.field, updateDef)
+                  .catch(fallbackError => console.warn(`컬럼 ${column.field} fallback 실패:`, fallbackError));
+              }
+            } catch (error) {
+              console.warn(`컬럼 ${column.field} 업데이트 실패:`, error);
             }
-          }
-        }, 10);
+          });
+          
+          const endTime = performance.now();
+          console.log(`동기화 컬럼 업데이트 완료: ${(endTime - startTime).toFixed(2)}ms`);
+        });
         
       } catch (error) {
-        console.error('컬럼 업데이트 중 오류 발생:', error);
-        // 에러 발생 시 fallback으로 기존 방식 사용
-        console.log('Fallback: destroy 후 재생성 방식 사용');
-        const currentData = tabulatorRef.current.getData();
-        tabulatorRef.current.destroy();
-        
-        tabulatorRef.current = new Tabulator(tableRef.current, {
-          data: currentData,
-          columns: getColumns(),
-          height: height,
-          layout: "fitColumns",
-          responsiveLayout: "hide",
-          pagination: "local",
-          paginationSize: 10,
-          paginationSizeSelector: [5, 10, 20, 50],
-          movableColumns: true,
-          resizableRows: true,
-          selectable: 1, // 단일 행 선택
-          selectableCheck: () => !editModeRef.current, // 편집모드가 아닐 때만 선택 가능
-          tooltips: true,
-          addRowPos: "top",
-          history: true,
-          clipboard: true,
-          clipboardCopyStyled: false,
-          clipboardPasteParser: "table",
-          clipboardCopyConfig: {
-            columnHeaders: false,
-            columnGroups: false,
-            rowGroups: false,
-            columnCalcs: false,
-            dataTree: false,
-            formatCells: false,
-          },
-          printAsHtml: true,
-          printStyled: true,
-          printRowRange: "visible",
-          downloadConfig: {
-            columnHeaders: true,
-            columnGroups: false,
-            rowGroups: false,
-            columnCalcs: false,
-            dataTree: false,
-          },
-          // 이벤트 핸들러
-          cellEdited: (cell: any) => {
-            console.log("셀이 편집되었습니다:", cell.getValue());
-          },
-          rowClick: (_e: any, row: any) => {
-            console.log("행이 클릭되었습니다:", row.getData());
-          },
-        });
+        console.error('편집모드 업데이트 중 오류:', error);
       }
     }
-  }, [isEditMode, getColumns]);
+  }, [isEditMode, positionOptions, departmentOptions]);
 
   // 편집모드 상태를 ref에 동기화 (selectableCheck에서 실시간 참조용)
   useEffect(() => {

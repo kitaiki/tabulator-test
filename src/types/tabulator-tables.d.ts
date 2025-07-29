@@ -41,11 +41,17 @@ declare module 'tabulator-tables' {
     rowClick?: (e: any, row: any) => void;
   }
 
+  export interface ColumnComponent {
+    updateDefinition(definition: Partial<ColumnDefinition>): void;
+  }
+
   export class TabulatorFull {
     constructor(element: HTMLElement, options: TabulatorOptions);
     setData(data: any[]): void;
     getData(): any[];
     setColumns(columns: ColumnDefinition[]): void;
+    updateColumnDefinition(field: string, definition: Partial<ColumnDefinition>): Promise<any>;
+    getColumn(field: string): ColumnComponent | false;
     addRow(data: any, pos?: string): void;
     getSelectedRows(): any[];
     download(type: string, filename: string): void;

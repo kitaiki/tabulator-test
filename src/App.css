@@ -179,6 +179,33 @@
   transition: all 0.3s ease;
 }
 
+/* 부드러운 컬럼 전환을 위한 최적화된 트랜지션 */
+.employee-table .tabulator-cell {
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.1s ease;
+}
+
+.employee-table .tabulator-col {
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.employee-table .tabulator-col-content {
+  transition: opacity 0.1s ease;
+}
+
+/* 편집 모드 전환 시 즉시 반응하는 애니메이션 */
+.employee-table .tabulator-row {
+  transition: background-color 0.1s ease, cursor 0.05s ease;
+}
+
+/* 편집모드 전환 시 깜빡임 방지 */
+.employee-table .tabulator {
+  will-change: auto;
+}
+
+.employee-table .tabulator-cell[contenteditable] {
+  transition: none; /* 편집 중일 때는 트랜지션 비활성화 */
+}
+
 /* 편집모드에서 테이블 스타일 */
 .employee-table.edit-mode .tabulator {
   box-shadow: 0 8px 25px rgba(253, 121, 168, 0.2);
