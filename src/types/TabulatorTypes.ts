@@ -23,10 +23,8 @@ export interface ColumnConfig {
   field: keyof UserData;
   width?: number;
   hozAlign?: "left" | "center" | "right";
-  formatter?: string | ((cell: any) => any);
-  editor?: string | boolean;
-  editorParams?: {
-    values?: string[] | { [key: string]: string };
-  };
+  formatter?: any;
+  editor?: any;
+  editorParams?: any;
   sorter?: string;
 }

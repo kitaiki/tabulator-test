@@ -12,6 +12,7 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
   const tabulatorRef = useRef<Tabulator | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isTableReady, setIsTableReady] = useState(false);
+  const [newRowIds, setNewRowIds] = useState<Set<number>>(new Set());
 
   // 직책 및 부서 옵션 정의
   const positionOptions = {0: "신입", 1: "대리", 2: "과장"};
@@ -21,7 +22,18 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
   const getColumns = useCallback((): ColumnConfig[] => [
     { title: "ID", field: "id", width: 80, hozAlign: "center", sorter: "number" },
     { title: "이름", field: "name", width: 120, editor: isEditMode ? "input" : false },
-    { title: "나이", field: "age", width: 80, hozAlign: "center", sorter: "number", editor: isEditMode ? "number" : false },
+    { 
+      title: "나이", 
+      field: "age", 
+      width: 80, 
+      hozAlign: "center", 
+      sorter: "number", 
+      editor: (cell: any) => {
+        if (!isEditMode) return false;
+        const rowId = cell.getRow().getData().id;
+        return newRowIds.has(rowId) ? "number" : false;
+      }
+    },
     { title: "이메일", field: "email", width: 200, editor: isEditMode ? "input" : false },
     { 
       title: "직책", 
@@ -51,7 +63,7 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
       editorParams: isEditMode ? { values: departmentOptions } : undefined
     },
     { title: "입사일", field: "startDate", width: 120, sorter: "date", editor: isEditMode ? "date" : false }
-  ], [isEditMode, positionOptions, departmentOptions]);
+  ], [isEditMode, positionOptions, departmentOptions, newRowIds]);
 
   useEffect(() => {
     if (tableRef.current && !tabulatorRef.current) {
@@ -198,11 +210,23 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
     }
   }, [isEditMode, getColumns, isTableReady]);
 
+  // newRowIds가 변경될 때 컬럼 업데이트
+  useEffect(() => {
+    if (tabulatorRef.current && isTableReady && isEditMode) {
+      try {
+        tabulatorRef.current.setColumns(getColumns());
+      } catch (error) {
+        console.error('컬럼 업데이트 중 오류:', error);
+      }
+    }
+  }, [newRowIds, getColumns, isTableReady, isEditMode]);
+
   // 테이블 조작 함수들
   const addRow = () => {
     if (tabulatorRef.current) {
+      const newId = Date.now();
       tabulatorRef.current.addRow({
-        id: Date.now(),
+        id: newId,
         name: "새 사용자",
         age: 25,
         email: "new@example.com",
@@ -211,13 +235,29 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
         department: "개발팀",
         startDate: new Date().toISOString().split('T')[0]
       });
+      
+      // 새로 추가된 행의 ID를 저장
+      setNewRowIds(prev => new Set([...prev, newId]));
     }
   };
 
   const deleteSelectedRows = () => {
     if (tabulatorRef.current) {
       const selectedRows = tabulatorRef.current.getSelectedRows();
-      selectedRows.forEach((row: any) => row.delete());
+      const deletedIds: number[] = [];
+      
+      selectedRows.forEach((row: any) => {
+        const rowData = row.getData();
+        deletedIds.push(rowData.id);
+        row.delete();
+      });
+      
+      // 삭제된 행의 ID를 newRowIds에서 제거
+      setNewRowIds(prev => {
+        const newSet = new Set(prev);
+        deletedIds.forEach(id => newSet.delete(id));
+        return newSet;
+      });
     }
   };
 
