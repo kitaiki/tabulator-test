@@ -5,7 +5,7 @@ export interface UserData {
   name: string;
   age: number;
   email: string;
-  position: string;
+  position: number;
   salary: number;
   department: string;
   startDate: string;
@@ -23,7 +23,7 @@ export interface ColumnConfig {
   field: keyof UserData;
   width?: number;
   hozAlign?: "left" | "center" | "right";
-  formatter?: string;
+  formatter?: string | ((cell: any) => any);
   editor?: string | boolean;
   editorParams?: {
     values?: string[] | { [key: string]: string };

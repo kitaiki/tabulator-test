@@ -14,7 +14,7 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
   const [isTableReady, setIsTableReady] = useState(false);
 
   // 직책 및 부서 옵션 정의
-  const positionOptions = ["신입", "대리", "과장"];
+  const positionOptions = {0: "신입", 1: "대리", 2: "과장"};
   const departmentOptions = ["개발팀", "디자인팀", "분석팀", "마케팅팀", "관리팀", "인사팀"];
 
   // 편집모드에 따른 컬럼 설정 (최적화된 버전)
@@ -27,6 +27,10 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
       title: "직책", 
       field: "position", 
       width: 150, 
+      formatter: (cell: any) => {
+        const value = cell.getValue();
+        return positionOptions[value as keyof typeof positionOptions] || value;
+      },
       editor: isEditMode ? "select" : false,
       editorParams: isEditMode ? { values: positionOptions } : undefined
     },
@@ -59,8 +63,8 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
         layout: "fitColumns",
         responsiveLayout: "hide",
         pagination: "local",
-        paginationSize: 10,
-        paginationSizeSelector: [5, 10, 20, 50],
+        paginationSize: 50,
+        paginationSizeSelector: [10, 20, 50, 100],
         movableColumns: true,
         resizableRows: true,
         selectable: true,
@@ -153,8 +157,8 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
           layout: "fitColumns",
           responsiveLayout: "hide",
           pagination: "local",
-          paginationSize: 10,
-          paginationSizeSelector: [5, 10, 20, 50],
+          paginationSize: 50,
+          paginationSizeSelector: [10, 20, 50, 100],
           movableColumns: true,
           resizableRows: true,
           selectable: true,
@@ -202,7 +206,7 @@ const TabulatorTable: React.FC<TabulatorComponentProps> = ({
         name: "새 사용자",
         age: 25,
         email: "new@example.com",
-        position: "신입",
+        position: 0,
         salary: 3000,
         department: "개발팀",
         startDate: new Date().toISOString().split('T')[0]
